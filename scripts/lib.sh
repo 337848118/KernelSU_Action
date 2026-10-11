@@ -222,6 +222,9 @@ apply_patch() {
 		warn "$(basename "$patch") applied with fuzz; verify the result"
 		return 0
 	fi
+	echo "===== SUSFS patch failure details: ${patch} =====" >&2
+	patch -p"$strip" --dry-run --force <"$patch" || true
+	echo "===== End patch failure details =====" >&2
 	warn "failed to apply $(basename "$patch")"
 	return 1
 }
