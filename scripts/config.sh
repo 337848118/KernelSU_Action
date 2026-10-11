@@ -71,6 +71,7 @@ declare -A DEFAULTS=(
 	[DISABLE_LTO]="false"
 	[DISABLE_CC_WERROR]="false"
 	[EXTRA_DEFCONFIG]=""
+	[EXTRA_CONFIG_FRAGMENTS]=""
 
 	# Packaging
 	[USE_CUSTOM_ANYKERNEL3]="false"
