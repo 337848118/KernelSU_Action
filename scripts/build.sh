@@ -26,6 +26,43 @@ prepare_defconfig() {
 
 	cp "$DEFCONFIG_PATH" "${WORKSPACE}/defconfig.orig"
 
+	# Merge the LineageOS 23.2 device config fragments.
+	# EXTRA_CONFIG_FRAGMENTS is a space-separated list of paths
+	# relative to arch/${ARCH}/configs.
+	if [ -n "${EXTRA_CONFIG_FRAGMENTS:-}" ]; then
+		local config_root="${KERNEL_DIR}/arch/${ARCH}/configs"
+		local merged_config="${config_root}/lmi_merged_defconfig"
+		local fragments=()
+		local fragment
+
+		for fragment in ${EXTRA_CONFIG_FRAGMENTS}; do
+			[ -f "${config_root}/${fragment}" ] \
+				|| die "config fragment not found: ${config_root}/${fragment}"
+			fragments+=("${config_root}/${fragment}")
+		done
+
+		mkdir -p "${OUT}"
+
+		"${KERNEL_DIR}/scripts/kconfig/merge_config.sh" \
+			-m -O "${OUT}" \
+			"${DEFCONFIG_PATH}" \
+			"${fragments[@]}" \
+			|| die "LineageOS config merge failed"
+
+		[ -f "${OUT}/.config" ] \
+			|| die "merged .config not found in ${OUT}"
+
+		cp "${OUT}/.config" "${merged_config}"
+
+		KERNEL_CONFIG="lmi_merged_defconfig"
+		DEFCONFIG_PATH="${merged_config}"
+
+		# Compare later changes against the merged device config.
+		cp "${DEFCONFIG_PATH}" "${WORKSPACE}/defconfig.orig"
+
+		info "using merged LineageOS config: ${KERNEL_CONFIG}"
+	fi
+
 	local kver
 	kver=$(kernel_version "$KERNEL_DIR" || echo "0.0")
 
